@@ -5,7 +5,7 @@
 @endpush
 
 
-@section('name', 'User Edit Form')
+@section('title', 'User Edit Form')
 
 
 @section('content')
@@ -15,9 +15,6 @@
 @endif
 
 
-<div class="col-md-3 mb-3 ml-3">
-<a href="{{ route('user.index') }} "><button class="btn btn-primary">Cancel</button></a>
-</div>
  <!-- Main content -->
  <section class="content">
       <div class="container-fluid">
@@ -25,7 +22,7 @@
           <!-- left column -->
           <div class="col-md-12">
             <!-- jquery validation -->
-            <div class="card card-primary">
+            <div class="card card-primary mt-3">
               <div class="card-header">
                 <h3 class="card-title">User Edit Form</h3>
               </div>
@@ -80,6 +77,8 @@
                 <!-- /.card-body -->
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{{ route('user.index') }} "><input type="button" value="Cancel" class="btn btn-primary"></input></a>
+
                 </div>
               </form>
             </div>

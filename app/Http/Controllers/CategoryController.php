@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use DataTables;
 
 class CategoryController extends Controller
 {
@@ -11,30 +12,47 @@ class CategoryController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $totalRecords = Category::count();
-        $limit = 5;
-        $totalPages = ceil($totalRecords / $limit);
-
-        $page = $request->query('page', 1);
-        if ($page < 1) {
-            $page = 1;
-        } elseif ($page > $totalPages) {
-            $page = $totalPages;
+    {   
+         $category = Category::all();
+         
+        if ($request->ajax()) {
+            $data = Category::select('id','name','status');
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('status', function ($row) {
+                    if ($row->status) {
+                        return 'Active';
+                    } else {
+                        return 'Inactive';
+                    }
+                })
+                ->addColumn('action', function ($row) { 
+                    return '<a href="'.route('category.edit', $row->id).'" class="btn btn-primary">Edit</a>
+                        <form method="POST" action="'.route('category.destroy', $row->id).'" style="display: inline;">
+                        ' . csrf_field() . '
+                        ' . method_field('DELETE') . '
+                        <button type="submit" class="btn btn-danger" onclick="return confirm(\'Are you sure you want to delete this category?\')" style="width: 70px;">Delete</button>
+                    </form>';
+                })
+                ->filter(function ($instance) use ($request) {
+                    if ($request->get('status') == '0' || $request->get('status') == '1') {
+                        $instance->where('status', $request->get('status'));
+                    }
+                    if (!empty($request->get('category'))) {
+                        $instance->where('id', $request->get('category'));
+                    }
+                    if (!empty($request->get('search'))) {
+                        $instance->where(function ($w) use ($request) {
+                            $search = $request->get('search');
+                            $w->orWhere('name', 'LIKE', "%$search%");
+                        });
+                    }
+                })
+                ->rawColumns(['status', 'action'])
+                ->make(true);
         }
 
-        $offset = ($page - 1) * $limit;
-
-        $category = Category::offset($offset)
-            ->limit($limit)
-            ->get();
-        return view('admin.category.index', [
-            'category' => $category,
-            'page' => $page,
-            'recordsPerPage' => $limit,
-            'totalRecords' => $totalRecords,
-            'totalPages' => $totalPages,
-        ]);
+        return view('admin.category.index', ['data' => $category]);
     }
 
     /**
@@ -105,7 +123,9 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         $category = Category::find($id);
-        if ($category) {
+        if ($category->tickets()->count() > 0) {
+            return redirect()->back()->with('warning', 'Category cannot be deleted as it has open tickets !');
+        } elseif ($category) {
             $category->delete();
         } else {
             return redirect()->back()->with('warning', 'category not found');

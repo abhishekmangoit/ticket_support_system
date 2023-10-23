@@ -14,7 +14,6 @@
     <main>
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-        @include('includes.header')
         @yield('content')
         </div>
    </main>

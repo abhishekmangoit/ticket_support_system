@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use DataTables;
 
 class UserController extends Controller
 {
@@ -12,29 +13,49 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $totalRecords = User::count();
-        $limit = 5;
-        $totalPages = ceil($totalRecords / $limit);
 
-        $page = $request->query('page', 1);
-        if ($page < 1) {
-            $page = 1;
-        } elseif ($page > $totalPages) {
-            $page = $totalPages;
+        if ($request->ajax()) {
+            $data = User::select('*');
+            return Datatables::of($data)
+                    ->addIndexColumn()
+                    ->addColumn('status', function($row){
+                         if($row->status){
+                            return 'Active';
+                         }else{
+                            return 'Inactive';
+                         }
+                    })
+                    ->addColumn('role', function($row){
+                        if($row->role == '3'){
+                           return 'Regular User';
+                        }elseif($row->role == '2'){
+                            return 'Agent';
+                         }else{
+                           return 'Admin';
+                        }
+                   })
+                   ->addColumn('action', function ($row) {
+                    return '<a href="' . route('user.edit', $row->id) . '"><button class="btn btn-primary">Edit</button></a>';
+                })
+                    ->filter(function ($instance) use ($request) {
+                        if ($request->get('status') == '0' || $request->get('status') == '1') {
+                            $instance->where('status', $request->get('status'));
+                        }
+                        if ($request->get('role') == '1' || $request->get('role') == '2' || $request->get('role') == '3') {
+                            $instance->where('role', $request->get('role'));
+                        }
+                        if (!empty($request->get('search'))) {
+                             $instance->where(function($w) use($request){
+                                $search = $request->get('search');
+                                $w->orWhere('name', 'LIKE', "%$search%")
+                                ->orWhere('email', 'LIKE', "%$search%");
+                            });
+                        }
+                    })
+                    ->rawColumns(['status','role', 'action'])
+                    ->make(true);
         }
-
-        $offset = ($page - 1) * $limit;
-
-        $user = User::offset($offset)
-            ->limit($limit)
-            ->get();
-        return view('admin.user.index', [
-            'user' => $user,
-            'page' => $page,
-            'recordsPerPage' => $limit,
-            'totalRecords' => $totalRecords,
-            'totalPages' => $totalPages,
-        ]);
+        return view('admin.user.index');
     }
 
     /**
@@ -53,19 +74,19 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|min:2',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:8|confirmed',
-            'confirmPassword' => 'required',
+            'password' => 'required|min:8',
+            'confirmPassword' => 'required|same:password',
             'status' => 'required',
             'role' => 'required',
         ]);
 
-        User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => $request->input('password'),
-            'status' => $request->input('status'),
-            'role' => $request->input('role'),
-        ]);
+        $newuser = new User();
+        $newuser->name = $request->input('name');
+        $newuser->email = $request->input('email');
+        $newuser->password = $request->input('password');
+        $newuser->status = $request->input('status');
+        $newuser->role = $request->input('role');
+        $newuser->save();
 
         return redirect()->route('user.index')->with('success', 'user registered successfully !');
     }

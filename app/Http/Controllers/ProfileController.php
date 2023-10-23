@@ -50,7 +50,9 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        // $user->delete();
+        $user->status = '0';
+        $user->save();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

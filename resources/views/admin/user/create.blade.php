@@ -5,7 +5,7 @@
 @endpush
 
 
-@section('name', 'User Register Form')
+@section('title', 'User Register Form')
 
 
 @section('content')
@@ -15,9 +15,7 @@
 @endif
 
 
-<div class="col-md-3 mb-3 ml-3">
-<a href="{{ route('user.index') }} "><button class="btn btn-primary">Cancel</button></a>
-</div>
+
  <!-- Main content -->
  <section class="content">
       <div class="container-fluid">
@@ -25,7 +23,7 @@
           <!-- left column -->
           <div class="col-md-12">
             <!-- jquery validation -->
-            <div class="card card-primary">
+            <div class="card card-primary mt-3">
               <div class="card-header">
                 <h3 class="card-title">User Register Form</h3>
               </div>
@@ -50,14 +48,14 @@
                   </div>
                   <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" id="password" value="{{ old('password') }}" placeholder="Enter user email">
+                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" id="password" value="{{ old('password') }}" placeholder="Enter user password">
                     @error('password')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                   </div>
                   <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" name="confirmPassword" class="form-control @error('confirmPassword') is-invalid @enderror" id="confirmPassword" value="{{ old('confirmPassword') }}" placeholder="Enter user email">
+                    <input type="password" name="confirmPassword" class="form-control @error('confirmPassword') is-invalid @enderror" id="confirmPassword" value="{{ old('confirmPassword') }}" placeholder="Enter user confirm password">
                     @error('confirmPassword')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -93,6 +91,7 @@
                 <!-- /.card-body -->
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{{ route('user.index') }} "><input type="button" class="btn btn-primary" value="Cancel"></input></a>
                 </div>
               </form>
             </div>
